@@ -51,3 +51,41 @@ export const SampleNotifications = [
         },
         _id: "2",
     }]
+
+
+
+    export const sampleMessage = [
+        {
+            attachments: [
+                {
+                    public_id:'lskd',
+                    url: 'lskdfg',
+                }
+            ],
+            content: "hello ji kaise ho",
+            _id:"skldfj",
+            sender: {
+                _id: "lsj",
+                name: "samne wala",
+            },
+            chat: "chatid",
+            createdAt:"2024-01-23T00:00:00.000Z",
+        },
+        {
+            attachments: [
+                {
+                    public_id:'lskd',
+                    url: 'lskdfg',
+                }
+            ],
+            content: "badhiya bhai",
+            _id:"skldfj",
+            sender: {
+                _id: "sfr",
+                name: "samne wala",
+            },
+            chat: "chatid",
+            createdAt:"2024-01-23T00:00:00.000Z",
+        },
+        
+    ]
