@@ -1,13 +1,3 @@
-// avatar = [],
-//     name,
-//     _id,
-//     groupChat = false,
-//     sameSender,
-//     isOnline,
-//     newMessageAlert,
-//     index = 0,
-//     handleDeleteChatOpen,
-
 export const Samplechats = [
     {
         avatar: [""],
@@ -22,7 +12,26 @@ export const Samplechats = [
         _id: "2",
         groupChat: false,
         members: ["1", "2"],
-    }]
+    },{
+        avatar: [""],
+        name: "john hoi",
+        _id: "3",
+        groupChat: false,
+        members: ["1", "2"],
+    },{
+        avatar: [""],
+        name: "john toi",
+        _id: "4",
+        groupChat: false,
+        members: ["1", "2"],
+    },{
+        avatar: [""],
+        name: "john soi",
+        _id: "5",
+        groupChat: false,
+        members: ["1", "2"],
+    },
+]
 
 export const SampleUsers = [
     {
@@ -34,7 +43,8 @@ export const SampleUsers = [
         avatar: [""],
         name: "john boi",
         _id: "2",
-    }]
+    },
+]
 
 export const SampleNotifications = [
     {

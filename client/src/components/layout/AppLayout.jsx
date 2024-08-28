@@ -26,7 +26,8 @@ const AppLayout = () => (WrappedComponent) => {
                         item
                         sm={4}
                         md={3}
-                        sx={{ display: { xs: "none", sm: "block" } }}
+                        sx={{ display: { xs: "none", sm: "block" },
+                    overflow:'auto' }}
                         height={"100%"}
                     >
                         <ChatList chats={Samplechats} chatId={chatId} handleDeleteChat={handleDeleteChat} />
