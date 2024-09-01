@@ -40,15 +40,16 @@ const register = asyncHandler(async (req, res) => {
 
 const getMyProfile = asyncHandler(async (req, res, next) => {
     // console.log(req.user);
-    res.send(req.user)
+    res.status(200).json(new ApiResponce(200,req.user,"user profile found succesfully"))
 })
 
 const logout = asyncHandler(async (req, res, next) => {
     return res.status(200).cookie("apna-tele-token", "", { ...cookieOption, maxAge: 0 }).json(new ApiResponce(200, "", "logged out successfully"))
 })
 
-const searchUser = asyncHandler(async (req, res) => {
-
+const searchUser = asyncHandler(async (req, res,next) => {
+    const {name} = req.query;
+    res.send(name)
 })
 
 

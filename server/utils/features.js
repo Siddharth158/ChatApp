@@ -19,4 +19,9 @@ const sendToken = (res, user, code, message) => {
     return res.status(code).cookie("apna-tele-token", token, cookieOption).json(new ApiResponce(201, "", message))
 }
 
-export { connectDb, sendToken }
+
+const emitEvent = (req,event,users,data)=>{
+    console.log("emitting event", event)
+}
+
+export { connectDb, sendToken, emitEvent }
