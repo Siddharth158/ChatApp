@@ -24,4 +24,8 @@ const emitEvent = (req,event,users,data)=>{
     console.log("emitting event", event)
 }
 
-export { connectDb, sendToken, emitEvent }
+const deleteFiles = async(public_ids) =>{
+
+}
+
+export { connectDb, sendToken, emitEvent, deleteFiles }

@@ -1,7 +1,5 @@
 import { User } from "../models/user.models.js";
 import {faker} from '@faker-js/faker'
-
-
 const createUser = async(numUsers)=>{
     try {
         const userPromise = [];
