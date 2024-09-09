@@ -1,10 +1,14 @@
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { User } from '../models/user.models.js'
-import { sendToken } from '../utils/features.js';
+import { emitEvent, sendToken } from '../utils/features.js';
 import { compare } from 'bcrypt';
 import { ErrorHandler } from '../utils/ErrorHandler.js';
 import { ApiResponce } from '../utils/ApiResponce.js';
 import { cookieOption } from '../constants/cookieOptions.js';
+import { Chat } from '../models/chat.models.js'
+import { Request } from '../models/request.models.js'
+import { NEW_REQUEST, REFETCH_CHATS } from '../constants/events.js';
+import { getOtherMembers } from '../lib/helper.js';
 
 const login = asyncHandler(async (req, res, next) => {
     const { username, password } = req.body;
@@ -25,8 +29,14 @@ const register = asyncHandler(async (req, res) => {
         public_id: "slkdf",
         url: 'skdjhf'
     }
+    const file = req.file;
 
     const { name, username, password, bio } = req.body
+
+     if(!file){
+        return next(new ErrorHandler("please upload avatar",400))
+     }
+     
     const user = await User.create({
         name,
         username,
@@ -38,19 +48,153 @@ const register = asyncHandler(async (req, res) => {
     sendToken(res, createdUser, 201, "User created")
 })
 
-const getMyProfile = asyncHandler(async (req, res, next) => {
-    // console.log(req.user);
-    res.status(200).json(new ApiResponce(200,req.user,"user profile found succesfully"))
+const getMyProfile = asyncHandler(async (req, res) => {
+    res.status(200).json({
+        success: true,
+        user: req.user
+    })
 })
 
 const logout = asyncHandler(async (req, res, next) => {
     return res.status(200).cookie("apna-tele-token", "", { ...cookieOption, maxAge: 0 }).json(new ApiResponce(200, "", "logged out successfully"))
 })
 
-const searchUser = asyncHandler(async (req, res,next) => {
-    const {name} = req.query;
-    res.send(name)
+const searchUser = asyncHandler(async (req, res, next) => {
+    const { name = "" } = req.query;
+    const mychats = await Chat.find({
+        groupChat: false,
+        members: req.user['_id']
+    })
+
+    const allUsersMyChat = mychats.flatMap((chat) => chat.members)
+
+    const otherUsers = await User.find({
+        _id: { $nin: allUsersMyChat },
+        name: { $regex: name, $options: "i" }
+    })
+
+    const users = otherUsers.map(({ _id, name, avatar }) => ({ _id, name, avatar: avatar.url }))
+
+    return res.status(200).json({
+        success: true,
+        users,
+    })
 })
+
+const sendRequest = asyncHandler(async (req, res, next) => {
+    const { userId } = req.body;
+    // console.log(userId)
+
+    const oldRequest = await Request.findOne({
+        $or: [
+            { sender: req.user['_id'], receiver: userId },
+            { sender: userId, receiver: req.user['_id'] },
+        ]
+    });
+    if (oldRequest) return next(new ErrorHandler("Request already sent"));
+
+    const newRequest = await Request.create({
+        sender: req.user['_id'],
+        receiver: userId
+    })
+
+    emitEvent(req, NEW_REQUEST, [userId])
+
+    return res.status(200).json({
+        success: true,
+        message: "request sent"
+    })
+
+})
+
+const acceptRequest = asyncHandler(async (req, res, next) => {
+    const { requestId, accept } = req.body;
+    const request = await Request.findById(requestId).populate("sender", "name").populate("receiver", "name")
+
+    if (!request) return next(new ErrorHandler("Request not found", 404));
+
+    if (request.receiver['_id'].toString() !== req.user['_id'].toString()) return next(new ErrorHandler("not are not authorized to accept the request", 401));
+
+    if (!accept) {
+        await request.deleteOne();
+        return res.status(200).json({
+            success: true,
+            message: "Friend Request Rejected"
+        })
+    }
+
+    const members = [request.sender._id, request.receiver._id]
+
+    await Promise.all([
+        Chat.create({
+            members,
+            name: `${request.sender.name} - ${request.receiver.name}`
+        }),
+        request.deleteOne(),
+    ])
+
+    emitEvent(req, REFETCH_CHATS, members)
+    return res.status(200).json({
+        success: true,
+        message: "Frined Request Accepted",
+        senderId: request.sender._id
+    })
+})
+
+const getAllNotifications = asyncHandler(async (req, res, next) => {
+    const requests = await Request.find({ receiver: req.user['_id'] }).populate("sender", "avatar")
+
+    console.log(requests)
+
+    const allRequests = requests.map(({ _id, sender }) => ({
+        _id,
+        sender: {
+            _id: sender._id,
+            name: sender.name,
+            avatar: sender.avatar.url,
+        }
+    }))
+
+    return res.status(200).json({
+        success: true,
+        allRequests,
+    })
+})
+
+const getAllFriends = asyncHandler(async (req, res, next) => {
+    const chatId = req.query.chatId;
+    const chats = await Chat.find({
+        members: req.user['_id'],
+        groupChat: false,
+    }).populate("members", "name avatar");
+
+    const friends = chats.map(({members})=>{
+        const otherUser = getOtherMembers(members,req.user['_id']);
+        return {
+            _id: otherUser._id,
+            name: otherUser.name,
+            avatar: otherUser.avatar
+        }
+    })
+
+    if(chatId){
+        const chat = await Chat.findById(chatId);
+        const availableFriends = friends.filter((friend)=> !chat.members.includes(friend._id));
+        return res.status(200).json({
+            success: true,
+            friends: availableFriends
+        })
+
+    } else{
+        return res.status(200).json({
+            success: true,
+            friends
+        })
+    }
+
+})
+
+
 
 
 export {
@@ -58,5 +202,9 @@ export {
     register,
     getMyProfile,
     logout,
-    searchUser
+    searchUser,
+    sendRequest,
+    acceptRequest,
+    getAllNotifications,
+    getAllFriends
 }

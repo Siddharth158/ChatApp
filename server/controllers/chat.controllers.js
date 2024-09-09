@@ -181,6 +181,9 @@ const sendAttachments = asyncHandler(async (req, res, next) => {
 
     const files = req.files || []
     if (files.length < 1) return next(new ErrorHandler("Please provide attachments", 400));
+    if(files.length > 5){
+        return next(new ErrorHandler("files cant be more than 5",400))
+    }
 
     //upload on cloudinary
     const attachments = [];
