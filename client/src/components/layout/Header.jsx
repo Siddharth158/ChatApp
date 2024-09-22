@@ -3,22 +3,31 @@ import React, { lazy, Suspense, useState } from 'react'
 import { orange } from "../constants/color";
 import { Add as AddIcon, Menu as Menuicon, Search as SearchIcon, Group as GroupIcon, Logout as LogoutIcon, Notifications as NotificationIcon } from "@mui/icons-material";
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios';
+import { server } from '../constants/config';
+import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import { userNotExists } from '../../redux/reducers/auth';
+import { setIsMobileMenu, setIsSearch } from '../../redux/reducers/misc';
 const SearchDialog = lazy(()=>import('../specific/Search'))
 const NotificationDialog = lazy(()=>import('../specific/Notifications'))
 const NewGroupDialog = lazy(()=>import('../specific/NewGroup'))
 
 const Header = () => {
     const navigate = useNavigate()
-    const [isMobile, setIsMobile] = useState(false);
-    const [isSearch, setIsSearch] = useState(false);
+    const {isSearch} = useSelector(state=>state.misc);
+    // const [isSearch, setIsSearch] = useState(false);
     const [isNewGroup, setIsNewGroup] = useState(false);
     const [isNotification, setIsNotification] = useState(false);
+    const dispatch = useDispatch();
     const handleMobile = () => {
-        setIsMobile(prev=>(!prev));
+        // setIsMobileMenu(true);
+        dispatch(setIsMobileMenu(true))
+        console.log("m")
     }
 
     const openSearch = () => {
-        setIsSearch(prev=>(!prev));
+        dispatch(setIsSearch(true))
     }
 
     const openNewGroup = () => {
@@ -31,8 +40,16 @@ const Header = () => {
 
     const navigateToGroup = () => navigate("/groups")
 
-    const handleLogout = ()=> {
-        console.log("logout");
+    const handleLogout = async ()=> {
+        try {
+            const {data} = await axios.get(`${server}/api/v1/user/logout`,{withCredentials:true})
+            dispatch(userNotExists())
+            toast.success(data.message);
+        } catch (error) {
+            toast.error(error.res.data.message || 'Something went wrong')
+        }
+
+
     }
 
     return (
@@ -44,7 +61,7 @@ const Header = () => {
                             Apna telegram
                         </Typography>
                         <Box sx={{ display: { xs: "block", sm: "none" } }} >
-                            <IconButton color='"inherit' onClick={handleMobile}>
+                            <IconButton color='inherit' onClick={handleMobile}>
                                 <Menuicon />
                             </IconButton>
                         </Box>

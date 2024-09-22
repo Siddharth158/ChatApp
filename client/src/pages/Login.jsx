@@ -1,8 +1,13 @@
-import React, { useState } from 'react'
-import { Avatar, Button, Container, IconButton, Paper, Stack, TextField, Typography } from '@mui/material'
+import { useFileHandler, useInputValidation } from '6pp';
 import { CameraAlt as CameraAltIcon } from "@mui/icons-material";
+import { Avatar, Button, Container, IconButton, Paper, Stack, TextField, Typography } from '@mui/material';
+import axios from 'axios';
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { server } from '../components/constants/config';
 import { VisuallyHiddenInput } from '../components/styles/StyledComponents';
-import { useFileHandler, useInputValidation, useStrongPassword } from '6pp'
+import { userExists } from '../redux/reducers/auth';
 import { usernameValidator } from '../utils/validators';
 
 function Login() {
@@ -17,13 +22,58 @@ function Login() {
 
     const avatar = useFileHandler("single");
 
+    const dispatch = useDispatch();
 
-    const handleLogin = (e) => {
+
+    const handleLogin = async (e) => {
         e.preventDefault();
+
+        const config = {
+            withCredentials:true,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+        
+        try {
+           const {data} = await axios.post(`${server}/api/v1/user/login`,{
+                username: username.value,
+                password: password.value
+            },config)
+            dispatch(userExists(true))
+            toast.success(data.message)
+        } catch (err) {
+            toast.error(err?.response.data.message || "something went wrong")
+        }
+
     }
 
-    const handleSignUp = (e) => {
+    const handleSignUp = async (e) => {
         e.preventDefault();
+
+        const config = {
+            withCredentials:true,
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }
+        const formData = new FormData();
+        formData.append("avatar",avatar.file)
+        formData.append("name",name.value)
+        formData.append("bio",bio.value)
+        formData.append("username",username.value)
+        formData.append("password",password.value)
+
+        try {
+            // console.log(formData)
+            const {data} = await axios.post(`${server}/api/v1/user/register`,formData,config)
+            // console.log(data)
+            dispatch(userExists(true))
+            toast.success(data.message)
+        } catch (err) {
+            console.log(err)
+            toast.error(err?.response?.data?.message || 'something went wrong');
+        }
     }
 
     return (

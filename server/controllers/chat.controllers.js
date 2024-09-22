@@ -44,7 +44,7 @@ const getMyChat = asyncHandler(async (req, res) => {
                 if (curr._id.toString() !== req.user["_id"].toString()) {
                     prev.push(curr._id);
                 }
-                returnprev;
+                return prev;
             }, [])
         }
     })

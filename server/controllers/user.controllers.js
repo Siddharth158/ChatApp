@@ -9,6 +9,7 @@ import { Chat } from '../models/chat.models.js'
 import { Request } from '../models/request.models.js'
 import { NEW_REQUEST, REFETCH_CHATS } from '../constants/events.js';
 import { getOtherMembers } from '../lib/helper.js';
+import {uploadFiles, deleteFiles} from '../utils/features.js'
 
 const login = asyncHandler(async (req, res, next) => {
     const { username, password } = req.body;
@@ -17,6 +18,9 @@ const login = asyncHandler(async (req, res, next) => {
         return next(new ErrorHandler("Invalid username", 404));
     }
     const user = await User.findOne({ username }).select("+password");
+    if(!user){
+        return next(new ErrorHandler("User does not exist",404))
+    }
     const isMatch = await compare(password, user.password);
     if (!isMatch) {
         return next(new ErrorHandler("Invalid password", 404));
@@ -24,18 +28,22 @@ const login = asyncHandler(async (req, res, next) => {
     sendToken(res, user, 200, "user found")
 })
 
-const register = asyncHandler(async (req, res) => {
-    const avatar = {
-        public_id: "slkdf",
-        url: 'skdjhf'
-    }
+const register = asyncHandler(async (req, res, next) => {
+    
     const file = req.file;
+    // console.log(file)
 
     const { name, username, password, bio } = req.body
 
-     if(!file){
+     if(!file || file.length == 0){
         return next(new ErrorHandler("please upload avatar",400))
      }
+
+     const result = await uploadFiles([file])
+     const avatar = {
+        public_id: result[0].public_id,
+        url: result[0].url
+    }
      
     const user = await User.create({
         name,
@@ -56,11 +64,14 @@ const getMyProfile = asyncHandler(async (req, res) => {
 })
 
 const logout = asyncHandler(async (req, res, next) => {
-    return res.status(200).cookie("apna-tele-token", "", { ...cookieOption, maxAge: 0 }).json(new ApiResponce(200, "", "logged out successfully"))
+    return res.status(200).cookie("apna-tele-token", "", { ...cookieOption, maxAge: 0 }).json({
+        success: true,
+        message: "Logged out successfully"
+    })
 })
 
 const searchUser = asyncHandler(async (req, res, next) => {
-    const { name = "" } = req.query;
+    const { name ="" } = req.query;
     const mychats = await Chat.find({
         groupChat: false,
         members: req.user['_id']
