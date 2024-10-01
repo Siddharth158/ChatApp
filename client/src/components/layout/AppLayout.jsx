@@ -18,6 +18,7 @@ const AppLayout = () => (WrappedComponent) => {
         const chatId = params.chatId;
 
         const { isMobileMenu } = useSelector(state => state.misc)
+        
         const dispatch = useDispatch()
 
         const { isLoading, data, isError, error, refetch } = useMyChatsQuery("")

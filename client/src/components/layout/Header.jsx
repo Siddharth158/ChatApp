@@ -8,20 +8,17 @@ import { server } from '../constants/config';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { userNotExists } from '../../redux/reducers/auth';
-import { setIsMobileMenu, setIsSearch } from '../../redux/reducers/misc';
-const SearchDialog = lazy(()=>import('../specific/Search'))
-const NotificationDialog = lazy(()=>import('../specific/Notifications'))
-const NewGroupDialog = lazy(()=>import('../specific/NewGroup'))
+import { setIsMobileMenu, setIsSearch, setIsNotification } from '../../redux/reducers/misc';
+const SearchDialog = lazy(() => import('../specific/Search'))
+const NotificationDialog = lazy(() => import('../specific/Notifications'))
+const NewGroupDialog = lazy(() => import('../specific/NewGroup'))
 
 const Header = () => {
     const navigate = useNavigate()
-    const {isSearch} = useSelector(state=>state.misc);
-    // const [isSearch, setIsSearch] = useState(false);
+    const { isSearch, isNotification } = useSelector(state => state.misc);
     const [isNewGroup, setIsNewGroup] = useState(false);
-    const [isNotification, setIsNotification] = useState(false);
     const dispatch = useDispatch();
     const handleMobile = () => {
-        // setIsMobileMenu(true);
         dispatch(setIsMobileMenu(true))
         console.log("m")
     }
@@ -31,18 +28,18 @@ const Header = () => {
     }
 
     const openNewGroup = () => {
-        setIsNewGroup(prev=>(!prev));
+        setIsNewGroup(prev => (!prev));
     }
 
     const openNotification = () => {
-        setIsNotification(prev=>(!prev));
+        dispatch(setIsNotification(true))
     }
 
     const navigateToGroup = () => navigate("/groups")
 
-    const handleLogout = async ()=> {
+    const handleLogout = async () => {
         try {
-            const {data} = await axios.get(`${server}/api/v1/user/logout`,{withCredentials:true})
+            const { data } = await axios.get(`${server}/api/v1/user/logout`, { withCredentials: true })
             dispatch(userNotExists())
             toast.success(data.message);
         } catch (error) {
