@@ -120,6 +120,7 @@ const sendRequest = asyncHandler(async (req, res, next) => {
 
 const acceptRequest = asyncHandler(async (req, res, next) => {
     const { requestId, accept } = req.body;
+    // console.log(req.body)
     const request = await Request.findById(requestId).populate("sender", "name").populate("receiver", "name")
 
     if (!request) return next(new ErrorHandler("Request not found", 404));
@@ -153,10 +154,7 @@ const acceptRequest = asyncHandler(async (req, res, next) => {
 })
 
 const getAllNotifications = asyncHandler(async (req, res, next) => {
-    const requests = await Request.find({ receiver: req.user['_id'] }).populate("sender", "avatar")
-
-    console.log(requests)
-
+    const requests = await Request.find({ receiver: req.user['_id'] }).populate("sender", "avatar name")
     const allRequests = requests.map(({ _id, sender }) => ({
         _id,
         sender: {
